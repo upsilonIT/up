@@ -1,0 +1,72 @@
+definitions:
+  services:
+    docker:
+      memory: 2048
+  caches:
+    nextjs: .next/cache
+    npm: $HOME/.npm
+  steps:
+    - step: &lint-build-test
+        name: Lint, Build & Test
+        image: cypress/browsers:node-16.18.1-chrome-110.0.5481.96-1-ff-109.0-edge-110.0.1587.41-1
+        max-time: 15 # minutes
+        caches:
+          - npm
+          - nextjs
+        script:
+          - npm ci
+          - npm run test:ci
+        artifacts:
+          - cypress/screenshots/**
+          - cypress/videos/**
+    - step: &deploy-to-dev
+        #python image with aws-cli installed
+        image: tstrohmeier/awscli:3.8.3
+        name: Deploy to Dev
+        deployment: Development
+        max-time: 20 # minutes
+        caches:
+          - docker
+        script:
+          - echo DEPLOY_STAGING
+    - step: &deploy-to-staging
+        #python image with aws-cli installed
+        image: tstrohmeier/awscli:3.8.3
+        name: Deploy to Staging
+        deployment: Staging
+        max-time: 20 # minutes
+        caches:
+          - docker
+        script:
+          - echo DEPLOY_DEV
+options:
+  docker: true
+
+pipelines:
+  branches:
+    "**":
+      - step: *lint-build-test
+    dev:
+      - parallel:
+          - step: *lint-build-test
+          - step: *deploy-to-dev
+    staging:
+      - parallel:
+          - step: *lint-build-test
+          - step: *deploy-to-staging
+  custom:
+    dev:
+      - step: *deploy-to-dev
+    staging:
+      - step: *deploy-to-staging
+    production:
+      - step:
+          #python image with aws-cli installed
+          image: tstrohmeier/awscli:3.8.3
+          name: Deploy to Production
+          deployment: Production
+          max-time: 20 # minutes
+          caches:
+            - docker
+          script:
+            - echo DEPLOY_PRODUCTION

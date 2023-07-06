@@ -1,0 +1,20 @@
+diff --git a/node_modules/@auth0/nextjs-auth0/dist/auth0-session/get-config.js b/node_modules/@auth0/nextjs-auth0/dist/auth0-session/get-config.js
+index c4e4301..1444cc3 100644
+--- a/node_modules/@auth0/nextjs-auth0/dist/auth0-session/get-config.js
++++ b/node_modules/@auth0/nextjs-auth0/dist/auth0-session/get-config.js
+@@ -4,7 +4,14 @@ exports.get = void 0;
+ var tslib_1 = require("tslib");
+ var joi_1 = tslib_1.__importDefault(require("joi"));
+ var get_login_state_1 = require("./hooks/get-login-state");
+-var isHttps = /^https:/i;
++// Why it's required:
++// 1. We need `SameSite=none` cookies due to Chrome security limitations
++//    when used with Cypress
++// 2. `SameSite=none` cookies also require cookies to be `Secure`
++// 3. Applying `AUTH0_COOKIE_SAME_SITE=none` and `AUTH0_COOKIE_SECURE=true`
++//    leads to an error if `AUTH0_BASE_URL` contains an HTTP URL, not HTTPS
++// 4. As we don't want to set up HTTPS on localhost, we come up with this:
++var isHttps = /^https?:/i;
+ var paramsSchema = joi_1.default.object({
+     secret: joi_1.default.alternatives([joi_1.default.string().min(8), joi_1.default.array().items(joi_1.default.string().min(8))]).required(),
+     session: joi_1.default.object({
