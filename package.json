@@ -1,0 +1,14 @@
+{
+  "name": "generator-up",
+  "version": "0.1.0",
+  "description": "",
+  "files": [
+    "templates"
+  ],
+  "keywords": [
+    "yeoman-generator"
+  ],
+  "dependencies": {
+    "yeoman-generator": "^5.9.0"
+  }
+}
